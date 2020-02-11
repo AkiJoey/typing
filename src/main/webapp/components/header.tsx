@@ -3,7 +3,7 @@ import './header.less';
 
 import { Avatar, Tooltip } from 'antd';
 
-const Header = () => {
+const Header = (): JSX.Element => {
 	return (
 		<div id="header">
 			<div id="nav">

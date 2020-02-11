@@ -1,6 +1,87 @@
 #content {
 	min-height: calc(100% - 10rem);
-	padding: 10px 0 20px;
-	line-height: 2;
-	animation: up 1s;
+	padding: 10px 0;
+	
+	#box {
+		width: 1000px;
+		min-height: 700px;
+		margin: 20px auto;
+		padding: 30px 40px;
+		background: rgba(255, 255, 255, .8);
+		border-radius: 8px;
+		box-shadow: 0 4px 8px 6px rgba(7, 17, 27, .06);
+		transition: .3s;
+		animation: up 1s;
+		&:hover {
+			box-shadow: 0 4px 12px 12px rgba(7, 17, 27, .15);
+		}
+		#text span {
+			font-size: 25px;
+			font-family: Roboto Mono;
+			line-height: 1.5;
+			word-wrap: break-word;
+		}
+		#input {
+			margin: 25px 0;
+			.ant-input {
+				width: 780px;
+				font-size: 18px;
+				font-weight: 500;
+				margin-right: 20px;
+				float: left;
+			}
+			.ant-btn {
+				width: 120px;
+				font-size: 18px;
+				float: left;
+			}
+		}
+		#keyboard {
+			width: 790px;
+			margin: 30px 0;
+			float: left;
+			.key {
+				width: 48px;
+				height: 48px;
+				margin: 2.5px;
+				font-size: 13px;
+				text-align: center;
+				border: 1px solid #aaa;
+				border-radius: 7px;
+				float: left;
+				transition: .15s;
+				p { margin: 2.5px 0; }
+				i { line-height: 50px; }
+			}
+			.left {
+				text-align: left;
+				padding-left: 8px;
+				line-height: 42.5px;
+			}
+			.center {
+				line-height: 42.5px;
+			}
+			.right {
+				text-align: right;
+				padding-right: 8px;
+				line-height: 42.5px;
+			}
+		}
+		#data {
+			margin-left: 40px;
+			float: left;
+			.title {
+				font-size: 15px;
+				margin: 35px 0 8px;
+			}
+			.detail {
+				font-size: 30px;
+				margin: -10px 0;
+				span {
+					font-size: 10px;
+					margin-left: 10px;
+				}
+			}
+		}
+	}
 }
