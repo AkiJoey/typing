@@ -6,86 +6,16 @@ import axios from 'axios';
 
 class Content extends Component {
 	readonly state: any = {
-		paragraph: [
-			{ text: 'This', color: '#DA70D6' },
-			{ text: 'is' },
-			{ text: 'test' },
-			{ text: 'text1.' },
-			{ text: 'This' },
-			{ text: 'is' },
-			{ text: 'test' },
-			{ text: 'text2.' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-			{ text: 'test' },
-		],
-		current: 0,
+		paragraph: [],
+		index: 0,
 		startTime: 0,
 		currentTime: 0,
 		keyCount: 0,
 		wordCount: 0,
 		errorCount: 0,
+		complete: false
 	}
-	keydown = (e: any): void => {
-		this.setState({
-			keyCount: this.state.keyCount + 1
-		});
+	handleKeyDown = (e: any): void => {
 		if (this.state.startTime === 0) {
 			this.setState({
 				startTime: new Date().getTime() / 1e3 - 0.5 // 避免超出上限 - 0.5 s
@@ -96,41 +26,87 @@ class Content extends Component {
 			key.style.background = '#4099ff';
 			key.style.color = '#eee';
 		}
+		if (this.state.complete) {	// 完成时阻止默认事件
+			e.preventDefault();
+			return;
+		}
+		this.setState({
+			keyCount: this.state.keyCount + 1
+		});
 		if (e.keyCode === 32) {
 			e.preventDefault();	// 阻止默认事件 (即阻止输入空格字符)
 			let paragraph = this.state.paragraph;
-			let current = this.state.current;
-			if (e.currentTarget.value === paragraph[current].text) {
-				paragraph[current].color = '#32CD32';
+			let index = this.state.index;
+			if (e.currentTarget.value === paragraph[index].text) {
+				paragraph[index].color = '#32CD32';
 				this.setState({
 					wordCount: this.state.wordCount + 1
 				});
 			}
 			else {
-				paragraph[current].color = '#FF0000';
+				paragraph[index].color = '#FF0000';
 				this.setState({
 					errorCount: this.state.errorCount + 1
 				});
 			}
-			paragraph[++current].color = '#DA70D6';
-			this.setState({ paragraph });
-			this.setState({ current });
+			if (index === this.state.paragraph.length - 1) {	// 判断是否完成
+				this.setState({
+					complete: true
+				});
+				message.success('Complete.');
+			}
+			else {
+				paragraph[++index].color = '#DA70D6';
+			}
+			this.setState({ paragraph, index });
 			let input: any = this.refs.input;	// 清空输入框
 			input.state.value = '';
 		}
 	}
-	keyup = (e: any): void => {
+	handleKeyUp = (e: any): void => {
 		let key = this.refs[e.keyCode] as HTMLElement;	// 按键动态响应 (删除样式)
 		if (key !== undefined) {
 			key.style.background = '';
 			key.style.color = '';
 		}
 	}
-	componentDidMount(): void {
-		setInterval((): void => {
+	handleClick = (): void => {
+		axios.post('http://localhost:8080/text')
+		.then(response => {
 			this.setState({
-				currentTime: new Date().getTime() / 1e3
+				paragraph: response.data,
+				index: 0,
+				startTime: 0,
+				keyCount: 0,
+				wordCount: 0,
+				errorCount: 0,
+				complete: false
 			});
+			console.log(response);
+		})
+		.catch(error => {
+			message.error('Network error.');
+			console.log(error);
+		});
+	}
+	componentDidMount(): void {
+		axios.post('http://localhost:8080/text')
+		.then(response => {
+			this.setState({
+				paragraph: response.data
+			});
+			console.log(response);
+		})
+		.catch(error => {
+			message.error('Network error.');
+			console.log(error);
+		});
+		setInterval((): void => {
+			if (!this.state.complete) {
+				this.setState({
+					currentTime: new Date().getTime() / 1e3
+				});
+			}
 		}, 100);	// 计时器 0.1 s 刷新一次
 	}
 	render(): JSX.Element {
@@ -142,8 +118,8 @@ class Content extends Component {
 				<div id="box">
 					<div id="text">{paragraph}</div>
 					<div id="input">
-						<Input ref="input" placeholder="Start typing" size="large" onKeyDown={this.keydown} onKeyUp={this.keyup} />
-						<Button type="primary" size="large">Next<Icon type="tags" /></Button>
+						<Input ref="input" placeholder="Start typing" size="large" onKeyDown={this.handleKeyDown} onKeyUp={this.handleKeyUp} />
+						<Button type="primary" size="large" onClick={this.handleClick}>Next<Icon type="tags" /></Button>
 					</div>
 					<div id="keyboard">
 						<div className="key" ref="192"><p>~</p><p>`</p></div>
