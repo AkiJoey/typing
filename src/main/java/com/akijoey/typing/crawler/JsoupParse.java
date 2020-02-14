@@ -7,7 +7,7 @@ import org.jsoup.select.Elements;
 import java.util.ArrayList;
 
 public class JsoupParse {
-    public String httpParse() {
+    public String[] htmlParse() {
         HttpClientGet httpClient = new HttpClientGet();
         String url = "http://www.globaltimes.cn/";
         String html = httpClient.httpGet(url);
@@ -20,7 +20,7 @@ public class JsoupParse {
         String[] element = elements.get(0).html().split("\\n<br>\\n<br>");
         ArrayList<String> article = new ArrayList<>();
         for (String paragraph : element) {
-            if (paragraph.indexOf('\n') == -1 && paragraph.indexOf('<') == -1) {
+            if (paragraph.indexOf('\n') == -1 && paragraph.indexOf('<') == -1 && !paragraph.isEmpty()) {
                 int index = paragraph.indexOf("&nbsp;");
                 if (index != -1) {
                     article.add(paragraph.substring(0, index));
@@ -30,6 +30,7 @@ public class JsoupParse {
             }
         }
         int random = (int)(Math.random() * article.size());
-        return article.get(random);
+        String paragraph = article.get(random).replaceAll("\\'s", " is").replaceAll("\\'re", " are").replaceAll("n\\'t", " not");
+        return paragraph.split(" ");
     }
 }

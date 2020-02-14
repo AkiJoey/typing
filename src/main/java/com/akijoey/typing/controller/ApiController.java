@@ -1,8 +1,10 @@
 package com.akijoey.typing.controller;
 
+import com.akijoey.typing.crawler.JsoupParse;
+import com.akijoey.typing.crawler.JacksonParse;
+
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestMapping;
-import com.akijoey.typing.crawler.JsoupParse;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,18 +13,22 @@ import java.util.HashMap;
 public class ApiController {
     @RequestMapping("/text")
     public ArrayList<HashMap<String, Object>> getText() {
-        JsoupParse Parser = new JsoupParse();
-        String[] paragraph = Parser.httpParse().split(" ");
+        JsoupParse jsoupParser = new JsoupParse();
+        String[] paragraph = jsoupParser.htmlParse();
+        JacksonParse jacksonParser = new JacksonParse();
+        String[] translations = jacksonParser.jsonParse(paragraph);
         ArrayList<HashMap<String, Object>> response = new ArrayList<>();
-        for (String word : paragraph) {
-            response.add(new HashMap<>(){
-                {
-                    put("text", word);
-                    if (word.equals(paragraph[0])) {
-                        put("color", "#DA70D6");
-                    }
-                }
-            });
+        for (int i = 0;i < paragraph.length;i++) {
+            HashMap<String, Object> data = new HashMap<>();
+            data.put("text", paragraph[i]);
+            if (i == 0) {
+                data.put("color", "#DA70D6");
+            } else {
+                data.put("color", "");
+            }
+            data.put("translation", translations[i]);
+            data.put("visible", false);
+            response.add(data);
         }
         return response;
     }

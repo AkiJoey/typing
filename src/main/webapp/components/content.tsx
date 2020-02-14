@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './content.less';
 
-import { message, Icon, Button, Input } from 'antd';
+import { message, Icon, Button, Input, Tooltip } from 'antd';
 import axios from 'axios';
 
 class Content extends Component {
@@ -13,12 +13,17 @@ class Content extends Component {
 		keyCount: 0,
 		wordCount: 0,
 		errorCount: 0,
-		complete: false
+		complete: false,
+		pronounce: '',
 	}
 	handleKeyDown = (e: any): void => {
-		if (this.state.startTime === 0) {
+		if (this.state.startTime === 0) {	// 设置初始状态 (开始计时, 显示翻译, 播放读音)
+			let paragraph = this.state.paragraph;
+			paragraph[0].visible = true;
 			this.setState({
-				startTime: new Date().getTime() / 1e3 - 0.5 // 避免超出上限 - 0.5 s
+				startTime: new Date().getTime() / 1e3 - 0.5, // 防止超出上限 - 0.5 s
+				pronounce: 'http://dict.youdao.com/speech?type=2&audio=' + paragraph[0].text,
+				paragraph
 			});
 		}
 		let key = this.refs[e.keyCode] as HTMLElement;	// 按键动态响应 (添加样式)
@@ -26,41 +31,47 @@ class Content extends Component {
 			key.style.background = '#4099ff';
 			key.style.color = '#eee';
 		}
-		if (this.state.complete) {	// 完成时阻止默认事件
-			e.preventDefault();
-			return;
+		if (!this.state.complete) {
+			this.setState({
+				keyCount: this.state.keyCount + 1
+			});
+			if (e.keyCode === 32) {
+				e.preventDefault();	// 阻止默认事件 (即阻止输入空格字符)
+				let paragraph = this.state.paragraph;
+				let index = this.state.index;
+				paragraph[index].visible = false;	//设置当前单词的样式
+				if (e.currentTarget.value === paragraph[index].text) {
+					paragraph[index].color = '#32CD32';
+					this.setState({
+						wordCount: this.state.wordCount + 1
+					});
+				}
+				else {
+					paragraph[index].color = '#FF0000';
+					this.setState({
+						errorCount: this.state.errorCount + 1
+					});
+				}
+				if (index === this.state.paragraph.length - 1) {	// 判断是否完成
+					this.setState({
+						complete: true
+					});
+					message.success('Complete.');
+				}
+				else {	// 设置下一个单词的样式 (字体颜色, 显示翻译, 播放读音)
+					paragraph[++index].color = '#DA70D6';
+					paragraph[index].visible = true;
+					this.setState({
+						pronounce: 'http://dict.youdao.com/speech?type=2&audio=' + paragraph[index].text
+					});
+				}
+				this.setState({ paragraph, index });
+				let input: any = this.refs.input;	// 清空输入框
+				input.state.value = '';
+			}
 		}
-		this.setState({
-			keyCount: this.state.keyCount + 1
-		});
-		if (e.keyCode === 32) {
-			e.preventDefault();	// 阻止默认事件 (即阻止输入空格字符)
-			let paragraph = this.state.paragraph;
-			let index = this.state.index;
-			if (e.currentTarget.value === paragraph[index].text) {
-				paragraph[index].color = '#32CD32';
-				this.setState({
-					wordCount: this.state.wordCount + 1
-				});
-			}
-			else {
-				paragraph[index].color = '#FF0000';
-				this.setState({
-					errorCount: this.state.errorCount + 1
-				});
-			}
-			if (index === this.state.paragraph.length - 1) {	// 判断是否完成
-				this.setState({
-					complete: true
-				});
-				message.success('Complete.');
-			}
-			else {
-				paragraph[++index].color = '#DA70D6';
-			}
-			this.setState({ paragraph, index });
-			let input: any = this.refs.input;	// 清空输入框
-			input.state.value = '';
+		else {
+			e.preventDefault();	// 完成时阻止默认事件
 		}
 	}
 	handleKeyUp = (e: any): void => {
@@ -71,7 +82,7 @@ class Content extends Component {
 		}
 	}
 	handleClick = (): void => {
-		axios.post('http://localhost:8080/text')
+		axios.get('http://localhost:8080/text')
 		.then(response => {
 			this.setState({
 				paragraph: response.data,
@@ -111,12 +122,17 @@ class Content extends Component {
 	}
 	render(): JSX.Element {
 		const paragraph = this.state.paragraph.map((value: any, key: number): JSX.Element => {
-			return <span key={key} style={{color: value.color}}>{value.text}&nbsp;&nbsp;</span>
+			return (
+				<Tooltip visible={value.visible} title={value.translation}>
+					<span key={key} style={{color: value.color}}>{value.text}&nbsp;&nbsp;</span>
+				</Tooltip>
+			);
 		});
 		return (
 			<div id="content">
 				<div id="box">
 					<div id="text">{paragraph}</div>
+					<audio autoPlay={true} src={this.state.pronounce}></audio>
 					<div id="input">
 						<Input ref="input" placeholder="Start typing" size="large" onKeyDown={this.handleKeyDown} onKeyUp={this.handleKeyUp} />
 						<Button type="primary" size="large" onClick={this.handleClick}>Next<Icon type="tags" /></Button>
