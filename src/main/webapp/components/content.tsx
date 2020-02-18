@@ -101,7 +101,7 @@ class Content extends Component {
 		});
 	}
 	componentDidMount(): void {
-		axios.post('http://localhost:8080/text')
+		axios.get('http://localhost:8080/text')
 		.then(response => {
 			this.setState({
 				paragraph: response.data
