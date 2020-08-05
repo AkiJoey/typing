@@ -43,6 +43,7 @@ build/
 
 # production
 /build
+src/main/resources/static/
 
 # misc
 .DS_Store
