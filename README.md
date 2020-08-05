@@ -1,6 +1,6 @@
 # Typing
 
-Typing application powered by Spring Boot and React.
+Typing application powered by Spring and React.
 
 ## Installation
 
